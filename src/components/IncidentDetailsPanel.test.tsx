@@ -23,6 +23,9 @@ describe("IncidentDetailsPanel", () => {
       />,
     );
 
+    expect(
+      screen.getByRole("complementary", { name: "INC-401" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "INC-401" })).toBeInTheDocument();
     expect(screen.getByText("Motion alert")).toBeInTheDocument();
 

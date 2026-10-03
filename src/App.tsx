@@ -13,7 +13,9 @@ function App() {
               <h1>Security incident console</h1>
             </div>
             <div className="metric">
-              <span>Loading dashboard…</span>
+                <div className="metric" role="status" aria-live="polite">
+                  <span>Loading dashboard…</span>
+                </div>
             </div>
           </header>
         </div>

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { Incident } from "../data/incidents";
 import { StatusBadge } from "./StatusBadge";
 
@@ -12,12 +13,23 @@ export default function IncidentDetailsPanel({
   onClose,
   onAcknowledge,
 }: IncidentDetailsPanelProps) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
+
   return (
-    <aside className="details-panel">
+    <aside
+      className="details-panel"
+      aria-labelledby="incident-details-heading"
+    >
       <div className="details-heading">
         <div>
           <p className="eyebrow">Incident details</p>
-          <h2>{incident.id}</h2>
+          <h2 id="incident-details-heading" ref={headingRef} tabIndex={-1}>
+            {incident.id}
+          </h2>
         </div>
         <button type="button" className="secondary" onClick={onClose}>
           Close details

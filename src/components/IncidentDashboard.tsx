@@ -1,4 +1,4 @@
-import { Suspense, lazy, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import {
   initialIncidents,
   type Incident,
@@ -12,6 +12,7 @@ import { IncidentTable } from "./IncidentTable";
 const IncidentDetailsPanel = lazy(() => import("./IncidentDetailsPanel"));
 
 export default function IncidentDashboard() {
+  const incidentTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [incidents, setIncidents] = useState<Incident[]>(initialIncidents);
   const [typeFilter, setTypeFilter] = useState<"All" | IncidentType>("All");
   const [statusFilter, setStatusFilter] = useState<"All" | IncidentStatus>(
@@ -37,6 +38,15 @@ export default function IncidentDashboard() {
   const selectedIncident =
     incidents.find((incident) => incident.id === selectedId) ?? null;
 
+  useEffect(() => {
+    if (!selectedIncident) incidentTriggerRef.current?.focus();
+  }, [selectedIncident]);
+
+  function selectIncident(id: string, trigger: HTMLButtonElement) {
+    incidentTriggerRef.current = trigger;
+    setSelectedId(id);
+  }
+
   function acknowledgeSelected() {
     if (!selectedIncident || selectedIncident.status !== "Active") return;
 
@@ -56,7 +66,7 @@ export default function IncidentDashboard() {
           <p className="eyebrow">Operations workspace</p>
           <h1>Security incident console</h1>
         </div>
-        <div className="metric">
+        <div className="metric" role="status" aria-live="polite" aria-atomic="true">
           <span>{activeCount}</span>
           <span>active incidents</span>
         </div>
@@ -111,35 +121,47 @@ export default function IncidentDashboard() {
         </section>
 
         <div className={`workspace${selectedIncident ? " has-details" : ""}`}>
-          <section className="results">
+          <section className="results" aria-labelledby="incidents-heading">
             <div className="results-heading">
               <div>
                 <p className="eyebrow">Current report</p>
-                <h2>Incidents</h2>
+                <h2 id="incidents-heading">Incidents</h2>
               </div>
-              <p>{filteredIncidents.length} shown</p>
+              <p role="status" aria-live="polite" aria-atomic="true">
+                {filteredIncidents.length} shown
+              </p>
             </div>
 
             {filteredIncidents.length === 0 ? (
-              <div className="empty-state">
+              <div className="empty-state" role="status">
                 <h3>No incidents match</h3>
                 <p>Change one of the report filters to restore results.</p>
               </div>
             ) : viewMode === "List" ? (
               <IncidentTable
                 incidents={filteredIncidents}
-                onSelect={setSelectedId}
+                onSelect={selectIncident}
               />
             ) : (
               <IncidentCards
                 incidents={filteredIncidents}
-                onSelect={setSelectedId}
+                onSelect={selectIncident}
               />
             )}
           </section>
 
           {selectedIncident && (
-            <Suspense fallback={<aside className="details-panel">Loading details…</aside>}>
+            <Suspense
+              fallback={
+                <aside
+                  className="details-panel"
+                  role="status"
+                  aria-live="polite"
+                >
+                  Loading details…
+                </aside>
+              }
+            >
               <IncidentDetailsPanel
                 incident={selectedIncident}
                 onClose={() => setSelectedId(null)}

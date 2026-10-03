@@ -22,11 +22,17 @@ describe("IncidentDashboard", () => {
   it("opens the details pane for a selected incident", async () => {
     render(<IncidentDashboard />);
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: /INC-101: Forced door detected/i }),
-    );
+    const incidentButton = await screen.findByRole("button", {
+      name: /INC-101: Forced door detected/i,
+    });
+    fireEvent.click(incidentButton);
 
-    expect(await screen.findByRole("heading", { name: "INC-101" })).toBeInTheDocument();
+    const detailsHeading = await screen.findByRole("heading", { name: "INC-101" });
+    expect(detailsHeading).toBeInTheDocument();
+    await waitFor(() => expect(detailsHeading).toHaveFocus());
     expect(screen.getByText("Forced door detected")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Close details/i }));
+    await waitFor(() => expect(incidentButton).toHaveFocus());
   });
 });

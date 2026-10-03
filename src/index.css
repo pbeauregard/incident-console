@@ -64,6 +64,11 @@ select {
   }
 }
 
+.details-panel h2[tabindex="-1"]:focus {
+  outline: 3px solid var(--color-highlight);
+  outline-offset: 4px;
+}
+
 button {
   border: 0;
   border-radius: 8px;

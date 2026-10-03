@@ -19,11 +19,19 @@ describe("IncidentTable", () => {
 
     render(<IncidentTable incidents={incidents} onSelect={onSelect} />);
 
+    expect(
+      screen.getByRole("table", {
+        name: "Incidents matching the current filters",
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/INC-301: Access denied/i)).toBeInTheDocument();
     expect(screen.getByText("Server room")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /INC-301: Access denied/i }));
+    const incidentButton = screen.getByRole("button", {
+      name: /INC-301: Access denied/i,
+    });
+    fireEvent.click(incidentButton);
 
-    expect(onSelect).toHaveBeenCalledWith("INC-301");
+    expect(onSelect).toHaveBeenCalledWith("INC-301", incidentButton);
   });
 });

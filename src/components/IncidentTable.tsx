@@ -3,13 +3,13 @@ import { StatusBadge } from "./StatusBadge";
 
 interface IncidentTableProps {
   incidents: Incident[];
-  onSelect: (id: string) => void;
+  onSelect: (id: string, trigger: HTMLButtonElement) => void;
 }
 
 export function IncidentTable({ incidents, onSelect }: IncidentTableProps) {
   return (
     <div className="table-wrap">
-      <table>
+      <table aria-label="Incidents matching the current filters">
         <caption>Security incidents matching the current filters</caption>
         <thead>
           <tr>
@@ -27,7 +27,7 @@ export function IncidentTable({ incidents, onSelect }: IncidentTableProps) {
                 <button
                   type="button"
                   className="link-button"
-                  onClick={() => onSelect(incident.id)}
+                  onClick={(event) => onSelect(incident.id, event.currentTarget)}
                 >
                   {incident.id}: {incident.title}
                 </button>

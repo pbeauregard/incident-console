@@ -19,11 +19,17 @@ describe("IncidentCards", () => {
 
     render(<IncidentCards incidents={incidents} onSelect={onSelect} />);
 
+    expect(
+      screen.getByRole("article", { name: "Door opened" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("INC-201")).toBeInTheDocument();
     expect(screen.getByText("Door opened")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /View details/i }));
+    const detailsButton = screen.getByRole("button", {
+      name: "View details for INC-201: Door opened",
+    });
+    fireEvent.click(detailsButton);
 
-    expect(onSelect).toHaveBeenCalledWith("INC-201");
+    expect(onSelect).toHaveBeenCalledWith("INC-201", detailsButton);
   });
 });
