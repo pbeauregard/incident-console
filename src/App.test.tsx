@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { initialIncidents } from "./data/incidents";
 import App from "./App";
 
 describe("App", () => {
@@ -15,7 +16,10 @@ describe("App", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/^2 shown$/i)).toBeInTheDocument();
+      const resolvedCount = initialIncidents.filter(
+        (incident) => incident.status === "Resolved",
+      ).length;
+      expect(screen.getByText(`${resolvedCount} shown`)).toBeInTheDocument();
     });
   });
 

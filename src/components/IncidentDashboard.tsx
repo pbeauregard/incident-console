@@ -1,11 +1,14 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import {
-  initialIncidents,
   type Incident,
   type IncidentStatus,
   type IncidentType,
   type ViewMode,
 } from "../data/incidents";
+import {
+  acknowledgeIncident as saveAcknowledgement,
+  getIncidents,
+} from "../data/incidentsApi";
 import { IncidentCards } from "./IncidentCards";
 import { IncidentTable } from "./IncidentTable";
 
@@ -13,13 +16,33 @@ const IncidentDetailsPanel = lazy(() => import("./IncidentDetailsPanel"));
 
 export default function IncidentDashboard() {
   const incidentTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const [incidents, setIncidents] = useState<Incident[]>(initialIncidents);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<"All" | IncidentType>("All");
   const [statusFilter, setStatusFilter] = useState<"All" | IncidentStatus>(
     "All",
   );
   const [viewMode, setViewMode] = useState<ViewMode>("List");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    getIncidents()
+      .then((loadedIncidents) => {
+        if (isMounted) setIncidents(loadedIncidents);
+      })
+      .catch(() => {
+        if (isMounted) setError("Unable to load incidents. Check the API connection and try again.");
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredIncidents = useMemo(
     () =>
@@ -47,16 +70,20 @@ export default function IncidentDashboard() {
     setSelectedId(id);
   }
 
-  function acknowledgeSelected() {
+  async function acknowledgeSelected() {
     if (!selectedIncident || selectedIncident.status !== "Active") return;
 
-    setIncidents((current) =>
-      current.map((incident) =>
-        incident.id === selectedIncident.id
-          ? { ...incident, status: "Acknowledged" }
-          : incident,
-      ),
-    );
+    try {
+      const updatedIncident = await saveAcknowledgement(selectedIncident.id);
+      setIncidents((current) =>
+        current.map((incident) =>
+          incident.id === updatedIncident.id ? updatedIncident : incident,
+        ),
+      );
+      setError(null);
+    } catch {
+      setError("Unable to acknowledge this incident. Try again.");
+    }
   }
 
   return (
@@ -132,7 +159,11 @@ export default function IncidentDashboard() {
               </p>
             </div>
 
-            {filteredIncidents.length === 0 ? (
+            {isLoading ? (
+              <div className="empty-state" role="status">Loading incidents…</div>
+            ) : error && incidents.length === 0 ? (
+              <div className="empty-state" role="alert">{error}</div>
+            ) : filteredIncidents.length === 0 ? (
               <div className="empty-state" role="status">
                 <h3>No incidents match</h3>
                 <p>Change one of the report filters to restore results.</p>
@@ -148,6 +179,8 @@ export default function IncidentDashboard() {
                 onSelect={selectIncident}
               />
             )}
+
+            {error && incidents.length > 0 && <p role="alert">{error}</p>}
           </section>
 
           {selectedIncident && (

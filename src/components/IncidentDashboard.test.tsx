@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { initialIncidents } from "../data/incidents";
 import IncidentDashboard from "./IncidentDashboard";
 
 describe("IncidentDashboard", () => {
@@ -15,7 +16,10 @@ describe("IncidentDashboard", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("2 shown")).toBeInTheDocument();
+      const resolvedCount = initialIncidents.filter(
+        (incident) => incident.status === "Resolved",
+      ).length;
+      expect(screen.getByText(`${resolvedCount} shown`)).toBeInTheDocument();
     });
   });
 
@@ -34,5 +38,20 @@ describe("IncidentDashboard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Close details/i }));
     await waitFor(() => expect(incidentButton).toHaveFocus());
+  });
+
+  it("persists an acknowledgement through the API", async () => {
+    render(<IncidentDashboard />);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /INC-101: Forced door detected/i }),
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Acknowledge incident" }));
+
+    await waitFor(() => {
+      expect(
+        within(screen.getByRole("complementary")).getByText("Acknowledged"),
+      ).toBeInTheDocument();
+    });
   });
 });
